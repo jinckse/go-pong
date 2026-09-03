@@ -41,7 +41,33 @@ type Game struct {
 func main() {
 	ebiten.SetWindowTitle("go-pong")
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	g := &Game{}
+	
+	// Set paddle and ball initial positions
+	paddle := Paddle {
+		Object: Object {
+			X: 600,
+			Y: 200,
+			W: 15,
+			H: 100,
+		},
+	}
+
+	ball := Ball {
+		Object: Object {
+			X: 0,
+			Y: 0,
+			W: 15,
+			H: 15,
+		},
+
+		dxdt: ballSpeed,
+		dydt: ballSpeed,
+	}
+
+	g := &Game {
+		paddle: paddle,
+		ball: ball,
+	}
 
 	err := ebiten.RunGame(g)
 
@@ -74,6 +100,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw high score
 	highScoreStr := "High Score: " + fmt.Sprint(g.highScore) //X, Y
 	text.Draw(screen, highScoreStr, basicfont.Face7x13, 10, 40, color.White)
+
+	if g.paddle.Y >= screenHeight {
+		// Draw current score
+		scoreStr := "**Out of Bounds**" + fmt.Sprint(g.score)    //X, Y
+		text.Draw(screen, scoreStr, basicfont.Face7x13, 640/2, 480/2, color.RGBA{0xff, 0, 0, 0xff})
+	}
 }
 
 // Called 60 times a second
@@ -110,7 +142,7 @@ func (g *Game) Reset() {
 }
 
 func (g *Game) CollideWithWall() {
-	// Right wall causes game over
+	// If ball goes into right wall causes game over
 	if g.ball.X >= screenWidth {
 		g.Reset()
 	} else if g.ball.X <= 0 { // Hit left wall
@@ -119,10 +151,18 @@ func (g *Game) CollideWithWall() {
 	} else if g.ball.Y <= 0 { // Hit top wall
 		// Reverse ball's Y speed and direction
 		g.ball.dydt = ballSpeed
-	} else if g.ball.Y <= screenHeight { // Hit bottom wall
+	} else if g.ball.Y >= screenHeight { // Hit bottom wall
 		// Reverse ball's Y speed and direction
-		g.ball.dydt = ballSpeed
+		g.ball.dydt = -ballSpeed
 	}
+
+	// Bound paddle to inside of screen
+	if g.paddle.Y >= screenHeight - g.paddle.H {
+		g.paddle.Y = screenHeight - g.paddle.H
+	} else if g.paddle.Y + g.paddle.H <= g.paddle.H {
+		g.paddle.Y = 0
+	}
+
 }
 
 func (g *Game) CollideWithPaddle() {
