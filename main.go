@@ -76,6 +76,68 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	text.Draw(screen, highScoreStr, basicfont.Face7x13, 10, 40, color.White)
 }
 
+// Called 60 times a second
 func (g *Game) Update() error {
+	g.paddle.MoveOnKeyPress()
+	g.ball.Move()
+	g.CollideWithWall()
+	g.CollideWithPaddle()
 	return nil
 }
+
+// Move paddle up and down with arrow keys
+func (p *Paddle) MoveOnKeyPress() {
+	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		p.Y += paddleSpeed
+	} 
+
+	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		p.Y -= paddleSpeed
+	} 
+}
+
+// Ball moves on its own
+func (b *Ball) Move() {
+	b.X += b.dxdt
+	b.Y += b.dydt
+}
+
+// Reset score and ball position
+func (g *Game) Reset() {
+	g.ball.X = 0
+	g.ball.Y = 0
+	g.score = 0
+}
+
+func (g *Game) CollideWithWall() {
+	// Right wall causes game over
+	if g.ball.X >= screenWidth {
+		g.Reset()
+	} else if g.ball.X <= 0 { // Hit left wall
+		// Reverse ball's X speed and direction
+		g.ball.dxdt = ballSpeed
+	} else if g.ball.Y <= 0 { // Hit top wall
+		// Reverse ball's Y speed and direction
+		g.ball.dydt = ballSpeed
+	} else if g.ball.Y <= screenHeight { // Hit bottom wall
+		// Reverse ball's Y speed and direction
+		g.ball.dydt = ballSpeed
+	}
+}
+
+func (g *Game) CollideWithPaddle() {
+	// Check that ball is in front of paddle and within its dimensions
+	if g.ball.X >= g.paddle.X && g.ball.Y >= g.paddle.Y && g.ball.Y <= g.paddle.Y + g.paddle.H {
+		// Reverse X speed to simulate bounce off the paddle
+		g.ball.dxdt = -g.ball.dxdt
+
+		// Add point to score
+		g.score++
+
+		// Update high score if applicable
+		if g.score > g.highScore {
+			g.highScore = g.score
+		}
+	}
+}
+	
