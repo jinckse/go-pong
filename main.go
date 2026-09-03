@@ -100,12 +100,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw high score
 	highScoreStr := "High Score: " + fmt.Sprint(g.highScore) //X, Y
 	text.Draw(screen, highScoreStr, basicfont.Face7x13, 10, 40, color.White)
-
-	if g.paddle.Y >= screenHeight {
-		// Draw current score
-		scoreStr := "**Out of Bounds**" + fmt.Sprint(g.score)    //X, Y
-		text.Draw(screen, scoreStr, basicfont.Face7x13, 640/2, 480/2, color.RGBA{0xff, 0, 0, 0xff})
-	}
 }
 
 // Called 60 times a second
@@ -151,7 +145,7 @@ func (g *Game) CollideWithWall() {
 	} else if g.ball.Y <= 0 { // Hit top wall
 		// Reverse ball's Y speed and direction
 		g.ball.dydt = ballSpeed
-	} else if g.ball.Y >= screenHeight { // Hit bottom wall
+	} else if g.ball.Y >= screenHeight - g.ball.H { // Hit bottom wall
 		// Reverse ball's Y speed and direction
 		g.ball.dydt = -ballSpeed
 	}
